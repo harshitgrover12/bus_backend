@@ -19,6 +19,26 @@ connection.connect((err)=>{
 })
 app.use(bodyParser.json());
 app.use(cors());
+app.post('/seats',(req,res)=>{
+    let{userid,busno,Seats,No}=req.body;
+    let sql="update buses_details set Seats_available=Seats_available-'"+No+"'where Bus_No='"+busno+"'";
+    connection.query(sql,(error,result)=>{
+        if(error)
+        {
+            res.send(error);
+        }
+       
+    })
+    Seats.map((seats)=>{
+        connection.query("insert into seat_details(Bus_no,seats_booked,user_id) values('"+busno+"','"+seats+"','"+userid+"')",(error,result)=>{
+            if(error)
+            {
+                res.send(error);
+            }
+        }
+   )}
+    )
+})
 app.post('/signIn',(req,res)=>{
     console.log('connected');
     let{Email,Password}=req.body;
@@ -31,7 +51,7 @@ app.post('/signIn',(req,res)=>{
         else
         {if(result)
             return(res.json({
-                data:result[0]
+                data:result
             }))
             else
             return(res.json(
@@ -63,7 +83,8 @@ app.post('/signUp',(req,res)=>{
     
     console.log('connected');
     console.log(req.body);
-    let sql="insert into user_details(user_id, Name, Email, password) values('"+req.body.userid+"','"+req.body.Name+"','"+req.body.Email+"','"+req.body.password+"') ";
+    let userid=Math.random()*1000;
+    let sql="insert into user_details(user_id, Name, Email, password) values('"+userid+"','"+req.body.Name+"','"+req.body.Email+"','"+req.body.password+"') ";
     
     connection.query(sql,(error,rows,fields)=>{
         if(error){
