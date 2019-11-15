@@ -19,9 +19,72 @@ connection.connect((err)=>{
 })
 app.use(bodyParser.json());
 app.use(cors());
+app.post('/seat1',(req,res)=>{
+    const{seat}=req.body;
+    let sql="select * from seat_details where seats_booked='"+seat+"'";
+    connection.query(sql,(error,result)=>{
+        if(error)
+        res.send(error)
+        else
+        {
+            return(res.json({
+                data:result
+            }))
+        }
+    })
+})
+app.post('/cancel',(req,res)=>{
+    const{seat_no,userid,busno}=req.body;
+    let sql="delete from seat_details where seats_booked='"+seat_no+"'";
+    let sql2="update buses_details set Seats_available=Seats_available+1 where Bus_No='"+busno+"'";
+    let sql1="select b.Bus_No,u.Name,seats_booked,Source,Destination,Departure_time,Arrival_time,Price,s.Date from user_details u,seat_details s,buses_details b where s.user_id='"+userid+"' and u.user_id=s.user_id and s.Bus_No=b.Bus_no";
+    connection.query(sql,(error,result)=>{
+        if(error)
+        {
+            res.send(error);
+        }
+    })
+    connection.query(sql2,(error,result)=>{
+        if(error)
+        {
+            res.send(error);
+        }
+    })
+    connection.query(sql1,(error,result)=>{
+        if(error)
+        {
+            res.send(error);
+        }
+        else
+        {
+            return(res.json({
+                data:result
+            }))
+        }
+    })
+})
+app.post('/purchaseHistory',(req,res)=>{
+    const {userid}=req.body
+    console.log(userid);
+    let sql="select b.Bus_No,u.Name,seats_booked,Source,Destination,Departure_time,Arrival_time,Price,s.Date from user_details u,seat_details s,buses_details b where s.user_id='"+userid+"' and u.user_id=s.user_id and s.Bus_No=b.Bus_no";
+    
+    connection.query(sql,(error,result)=>{
+        if(error)
+        {
+            res.send(error);
+        }
+        else
+        {
+            return(res.json({
+                data:result
+            }))
+        }
+    })
+})
 app.post('/seats',(req,res)=>{
-    let{userid,busno,Seats,No}=req.body;
+    let{userid,busno,Seats,No,date}=req.body;
     let sql="update buses_details set Seats_available=Seats_available-'"+No+"'where Bus_No='"+busno+"'";
+    
     connection.query(sql,(error,result)=>{
         if(error)
         {
@@ -30,7 +93,7 @@ app.post('/seats',(req,res)=>{
        
     })
     Seats.map((seats)=>{
-        connection.query("insert into seat_details(Bus_no,seats_booked,user_id) values('"+busno+"','"+seats+"','"+userid+"')",(error,result)=>{
+        connection.query("insert into seat_details(Bus_No,seats_booked,user_id,Date) values('"+busno+"','"+seats+"','"+userid+"','"+date+"')",(error,result)=>{
             if(error)
             {
                 res.send(error);
@@ -49,21 +112,27 @@ app.post('/signIn',(req,res)=>{
             res.send(error);
         }
         else
-        {if(result)
+        {
+          
+        
             return(res.json({
                 data:result
             }))
-            else
-            return(res.json(
-                'noEntry'
-            ))
+            
+            
+            
         }
     })
 })
 
 app.post('/searchResults',(req,res)=>{console.log('connected');
    let{source,destination,startdate}=req.body;
+   let sql1="update buses_details set Date=date_format('"+startdate+"','%Y-%m-%d' ) where Source='"+source+"'and Destination='"+destination+"'";
    let sql="select * from buses_details where source='"+source+"'and destination='"+destination+"'";
+   connection.query(sql1,(error,result)=>{
+       if(error)
+       res.send(error);
+   })
     connection.query(sql,(error,results)=>{
         if(error){
             res.send(error);
